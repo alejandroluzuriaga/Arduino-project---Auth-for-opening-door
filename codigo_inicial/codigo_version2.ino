@@ -148,7 +148,7 @@ void loop_crear_huella() {
   while (!obtener_registro_huella());
 } 
 
-void loop_autenticarse() {
+int loop_autenticarse() {
   uint8_t p = finger.getImage();
   if (p != FINGERPRINT_OK)  return -1;
 
@@ -224,7 +224,7 @@ int escaneo(int p) {
   detectar_huella(p);
 
   p = finger.image2Tz(1); //image2Tz() convierte la imagen de la huella digital en otro formato
-  int resultado = escanear_huella(p);
+  return escanear_huella(p);
 }
 
 void detectar_huella(int p) {
