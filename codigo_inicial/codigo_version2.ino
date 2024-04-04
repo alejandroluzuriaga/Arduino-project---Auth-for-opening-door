@@ -45,7 +45,7 @@ void setup_lcd() {
   lcd.print("App conectada!"); // Lo que se escribe en la pantalla
 }
 
-// Función para abrir y cerra la puerta
+// Función para abrir y cerrar la puerta
 void controlServo() {
   myServo.write(70);
   delay(1000);
@@ -178,25 +178,25 @@ uint8_t lecturaID(void) {
 
 uint8_t obtener_registro_huella() {
   int p = -1;
-  Serial.print("Esperando la huella para registrarla en #"); 
-  Serial.println(id);
+  escribirEnLCD("Esperando la huella para registrarla en #"); 
+  escribirEnLCD(id);
   while (p != FINGERPRINT_OK) {
     p = finger.getImage(); //getImage() intenta capturar una imagen de la huella digital
     switch (p) {
     case FINGERPRINT_OK:
-      Serial.println("Huella detectada");
+      escribirEnLCD("Huella detectada");
       break;
     case FINGERPRINT_NOFINGER:
-      Serial.println(".");
+      escribirEnLCD(".");
       break;
     case FINGERPRINT_PACKETRECIEVEERR:
-      Serial.println("Error de comunicación");
+      escribirEnLCD("Error de comunicación");
       break;
     case FINGERPRINT_IMAGEFAIL:
-      Serial.println("Huella no detectada");
+      escribirEnLCD("Huella no detectada");
       break;
     default:
-      Serial.println("Error desconocido");
+      escribirEnLCD("Error desconocido");
       break;
     }
   }
@@ -205,55 +205,55 @@ uint8_t obtener_registro_huella() {
   p = finger.image2Tz(1); //image2Tz() convierte la imagen de la huella digital en otro formato
   switch (p) {
     case FINGERPRINT_OK:
-      Serial.println("Escaneo correcto");
+      escribirEnLCD("Escaneo correcto");
       break;
     case FINGERPRINT_IMAGEMESS:
-      Serial.println("Escaneo incorrecto");
+      escribirEnLCD("Escaneo incorrecto");
       return p;
     case FINGERPRINT_PACKETRECIEVEERR:
-      Serial.println("Error de comunicación");
+      escribirEnLCD("Error de comunicación");
       return p;
     case FINGERPRINT_FEATUREFAIL:
-      Serial.println("No se puede escanear esta huella");
+      escribirEnLCD("No se puede escanear esta huella");
       return p;
     case FINGERPRINT_INVALIDIMAGE:
-      Serial.println("No se puede escanear esta huella");
+      escribirEnLCD("No se puede escanear esta huella");
       return p;
     default:
-      Serial.println("Error desconocido");
+      escribirEnLCD("Error desconocido");
       return p;
   }
   
-  Serial.println("Quita el dedo");
+  escribirEnLCD("Quita el dedo");
   delay(2000);
   p = 0;
   while (p != FINGERPRINT_NOFINGER) {
     p = finger.getImage(); //getImage() intenta capturar una imagen de la huella digital
   }
-  Serial.print("ID "); 
-  Serial.println(id);
+  escribirEnLCD("ID "); 
+  escribirEnLCD(id);
   p = -1;
-  Serial.println("Vuelve a poner el dedo");
+  escribirEnLCD("Vuelve a poner el dedo");
   while (p != FINGERPRINT_OK) {
     p = finger.getImage(); //getImage() intenta capturar una imagen de la huella digital
     switch (p) {
     case FINGERPRINT_OK:
-      Serial.println("Escaneo correcto");
+      escribirEnLCD("Escaneo correcto");
       break;
     case FINGERPRINT_IMAGEMESS:
-      Serial.println("Escaneo incorrecto");
+      escribirEnLCD("Escaneo incorrecto");
       return p;
     case FINGERPRINT_PACKETRECIEVEERR:
-      Serial.println("Error de comunicación");
+      escribirEnLCD("Error de comunicación");
       return p;
     case FINGERPRINT_FEATUREFAIL:
-      Serial.println("No se puede escanear esta huella");
+      escribirEnLCD("No se puede escanear esta huella");
       return p;
     case FINGERPRINT_INVALIDIMAGE:
-      Serial.println("No se puede escanear esta huella");
+      escribirEnLCD("No se puede escanear esta huella");
       return p;
     default:
-      Serial.println("Error desconocido");
+      escribirEnLCD("Error desconocido");
       return p;
     }
   }
@@ -262,59 +262,59 @@ uint8_t obtener_registro_huella() {
   p = finger.image2Tz(2); //image2Tz() convierte la imagen de la huella digital en otro formato
   switch (p) {
     case FINGERPRINT_OK:
-      Serial.println("Escaneo correcto");
+      escribirEnLCD("Escaneo correcto");
       break;
     case FINGERPRINT_IMAGEMESS:
-      Serial.println("Escaneo incorrecto");
+      escribirEnLCD("Escaneo incorrecto");
       return p;
     case FINGERPRINT_PACKETRECIEVEERR:
-      Serial.println("Error de comunicación");
+      escribirEnLCD("Error de comunicación");
       return p;
     case FINGERPRINT_FEATUREFAIL:
-      Serial.println("No se puede escanear esta huella");
+      escribirEnLCD("No se puede escanear esta huella");
       return p;
     case FINGERPRINT_INVALIDIMAGE:
-      Serial.println("No se puede escanear esta huella");
+      escribirEnLCD("No se puede escanear esta huella");
       return p;
     default:
-      Serial.println("Error desconocido");
+      escribirEnLCD("Error desconocido");
       return p;
   }
   
   //si se escanea correctamente la huella
-  Serial.print("Creando modelo para #");  
-  Serial.println(id);
+  escribirEnLCD("Creando modelo para #");  
+  escribirEnLCD(id);
   
   p = finger.createModel(); //createModel() crea el modelo de la huella
   if (p == FINGERPRINT_OK) {
-    Serial.println("Modelo creado correctamente");
+    escribirEnLCD("Modelo creado correctamente");
   } else if (p == FINGERPRINT_PACKETRECIEVEERR) {
-    Serial.println("Error de comunicación");
+    escribirEnLCD("Error de comunicación");
     return p;
   } else if (p == FINGERPRINT_ENROLLMISMATCH) {
-    Serial.println("Modelo NO creado correctamente");
+    escribirEnLCD("Modelo NO creado correctamente");
     return p;
   } else {
-    Serial.println("Error desconocido");
+    escribirEnLCD("Error desconocido");
     return p;
   }   
   
-  Serial.print("ID "); 
-  Serial.println(id);
+  escribirEnLCD("ID "); 
+  escribirEnLCD(id);
   p = finger.storeModel(id); //storeModel() almacena el modelo de huella digital 
   if (p == FINGERPRINT_OK) {
-    Serial.println("Huella guardada");
+    escribirEnLCD("Huella guardada");
   } else if (p == FINGERPRINT_PACKETRECIEVEERR) {
-    Serial.println("Error de comunicación");
+    escribirEnLCD("Error de comunicación");
     return p;
   } else if (p == FINGERPRINT_BADLOCATION) {
-    Serial.println("No se puede guardar la huella en esa localización");
+    escribirEnLCD("No se puede guardar la huella en esa localización");
     return p;
   } else if (p == FINGERPRINT_FLASHERR) {
-    Serial.println("Error al escribir en la memoria flash");
+    escribirEnLCD("Error al escribir en la memoria flash");
     return p;
   } else {
-    Serial.println("Error desconocido");
+    escribirEnLCD("Error desconocido");
     return p;
   } 
 }
