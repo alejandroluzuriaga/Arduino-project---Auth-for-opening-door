@@ -7,7 +7,7 @@
 Servo myServo;
 LiquidCrystal lcd(9, 8, 7, 6, 5, 4, 2);
 SoftwareSerial BTSerial(2,3); // Serial para el Bluetooth
-SoftwareSerial FingerSerial(11,13); // Serial para el sensor de huella
+SoftwareSerial FingerSerial(13,11); // Serial para el sensor de huella
 Adafruit_Fingerprint finger = Adafruit_Fingerprint(&FingerSerial);
 uint8_t id;
 
