@@ -1,12 +1,20 @@
 // Librerías
 #include <Servo.h> // Librería servo
 #include <LiquidCrystal.h> // Librería lcd (pantalla)
-#include <SoftwareSerial.h> 
+#include <SoftwareSerial.h>  //Librería Bluetooth
 #include <Adafruit_Fingerprint.h> // Librería de la huella dactilar
 
+// Inicialización Bluetooth
+SoftwareSerial BTSerial(2, 3);
+
+// Inicialización LCD
+const int rs = 9, en = 8, d4 = 7, d5 = 6, d6 = 5, d7 = 4;
+LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+
+// Inicialización Servo
 Servo myServo;
-LiquidCrystal lcd(9, 8, 7, 6, 5, 4, 2);
-SoftwareSerial BTSerial(2,3); // Serial para el Bluetooth
+
+// Inicialización Sensor de Huella dactilar
 SoftwareSerial FingerSerial(13,11); // Serial para el sensor de huella
 Adafruit_Fingerprint finger = Adafruit_Fingerprint(&FingerSerial);
 uint8_t id;
@@ -24,6 +32,14 @@ String leerDatosBluetooth() {
     }
   }
   return data;
+  /* DE OLEK
+  if (BTSerial.available()) {
+    Serial.write(BTSerial.read());
+  }
+  if (Serial.available()) {
+    BTSerial.write(Serial.read());
+  }
+  */
 }
 
 void setup_bluetooth() {
@@ -33,7 +49,7 @@ void setup_bluetooth() {
 // Función para escribir en la pantalla LCD
 void escribirEnLCD(String message) {
   lcd.clear();
-  lcd.setCursor(0, 0);
+  lcd.setCursor(0, 1);
   lcd.print(message);
 }
 
@@ -47,14 +63,13 @@ void setup_lcd() {
 
 // Función para abrir y cerrar la puerta
 void controlServo() {
-  myServo.write(70);
-  delay(1000);
-  myServo.write(180);
-  delay(1000);
+  myServo.write(0);
+  delay(500);
+  myServo.write(90);
 }
 
 void setup_servo() {
-  myServo.attach(10); // Servo -> pin 10
+  myServo.attach(A0); // Servo -> pin A0
 }
 
 void setup() {
