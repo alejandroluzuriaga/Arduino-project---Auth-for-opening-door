@@ -52,17 +52,20 @@ void loop() {
       if (numString != "0") {
         int numInt = numString.toInt();
         uint8_t id = (uint8_t)numInt;
-        while (id != 0 && !crearHuella(id))
-          ;
+        while (id != 0 && !crearHuella(id));
         BTSerial.begin(9600);
         lcd.clear();
         pantallaEspera();
+        delay(500);
+        BTSerial.write("0");
       }
     } else if (appData == 2) {
       abrirPuerta();
       BTSerial.begin(9600);
       lcd.clear();
       pantallaEspera();
+      delay(500);
+      BTSerial.write("0");
     }
   }
   delay(100);

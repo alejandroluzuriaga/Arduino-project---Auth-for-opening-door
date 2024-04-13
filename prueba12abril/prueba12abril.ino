@@ -1,7 +1,7 @@
 // Librerías
 #include <Servo.h> // Librería servo
 #include <LiquidCrystal.h> // Librería lcd (pantalla)
-#include <SoftwareSerial.h>  //Librería Bluetooth
+#include <SoftwareSerial.h>  // Librería Bluetooth
 #include <Adafruit_Fingerprint.h> // Librería de la huella dactilar
 
 // Declaración Bluetooth
@@ -18,7 +18,7 @@ Servo myServo;
 SoftwareSerial FingerSerial(13, 11); 
 Adafruit_Fingerprint finger = Adafruit_Fingerprint(&FingerSerial);
 
-String appData = "";
+int appData = 0;
 char mensaje[100] = "";
 uint8_t huellaEncontrada = -1;
 
@@ -34,41 +34,68 @@ void setup() {
 
   // Inicializar servo
   myServo.attach(A0);
-
-  // LCDmensaje -> App conectada!
-  lcd.print("App conectada!");
+  
+  escribirPuntos();
 }
 
 void loop() {
   if(BTSerial.available()) {
     appData = leerDatosApp();
+    Serial.println(appData);
+    int numString = 0;
   
-    if(appData == "1") {
-      delay(2000);
+    if(appData == 1) {
+      while(!BTSerial.available());
       String numString = "0";
-      while(numString.equals("0")) {
-        numString = leerDatosApp();
+      numString = leerID();
+      delay(500);
+      if(numString != "0") {
+        int numInt = numString.toInt();
+        uint8_t id = (uint8_t) numInt;
+        Serial.print("El id de la app es: "); 
+        Serial.println(id);
+        while (id != 0 && !crearHuella(id));
+        BTSerial.begin(9600);
+        lcd.clear();
+        escribirPuntos();
       }
-      
-      int numInt = numString.toInt();
-      uint8_t id = (uint8_t) numInt;
-      Serial.print("El id de la app es: "); Serial.println(id);
-      while (id != 0 && !crearHuella(id));
     }
-    else if(appData == "2") {
+    else if(appData == 2) {
       abrirPuerta();
+      BTSerial.begin(9600);
+      lcd.clear();
+      escribirPuntos();
     }
+  }
+  delay(100);
+}
+
+void escribirPuntos() {
+  int contadorPuntos = 0;
+  while (!BTSerial.available()) {
+    lcd.clear(); // Limpia la pantalla
+    lcd.print("Esperando app"); // Escribe el mensaje
+
+    // Bucle para escribir los puntos
+    for (int i = 0; i < contadorPuntos; i++) {
+      lcd.print(".");
+    }
+
+    contadorPuntos = (contadorPuntos + 1) % 4; // Incrementa y reinicia el contador de puntos
+    delay(500); // Espera medio segundo
   }
 }
 
-String leerDatosApp() {
+int leerDatosApp() {
+  return BTSerial.read() - '0';
+}
+
+String leerID() {
   String data = "";
-  if (BTSerial.available()) {
-    while (BTSerial.available()) {
-      char c = BTSerial.read();
-      Serial.println(c);
-      data += c;
-    }
+  while (BTSerial.available()) {
+    delay(500);
+    char c = BTSerial.read();
+    data += c;
   }
   return data;
 }
@@ -86,20 +113,18 @@ void abrirPuerta() {
     controlServo();
   }
   else {
-    strcpy(mensaje, "No estas autenticado/a!. ");
-    escribirEnLCDDinamico(mensaje, strlen(mensaje));
+    escribirEnLCDFijo("Error de huella.");
   }
 }
 
 void controlServo() {
   myServo.write(0); // Abre la puerta
-  delay(1000);
+  delay(10000);
   myServo.write(90); // Cierra la puerta
 }
 
 uint8_t getFingerprintIDez() {
-  strcpy(mensaje, "Introduce la huella. ");
-  escribirEnLCDDinamico(mensaje, strlen(mensaje));
+  escribirEnLCDFijo("Pon el dedo.");
   uint8_t p = finger.getImage();
   if (p != FINGERPRINT_OK)  return -1;
 
@@ -125,34 +150,21 @@ void detectar_sensor() {
   }
 }
 
-void escribirEnLCDDinamico(char *mensaje, int longitud) { // EL TEXTO SE MUEVE
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  for (int i = 0; i < longitud; ++i) {
-    String textoDesplazado = String(mensaje).substring(i) + String(mensaje).substring(0, i);
-    lcd.print(textoDesplazado);
-    delay(200);
-    lcd.setCursor(0, 0);
-  }
-  delay(500);
-}
-
-void escribirEnLCDFijo(String message) { // EL TEXTO ESTÁ FIJO
+void escribirEnLCDFijo(String message) {
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print(message);
   delay(2000);
 }
 
-uint8_t crearHuella(uint8_t id) { // Es la función "getFingerprintEnroll" del fichero "enroll"
+uint8_t crearHuella(uint8_t id) {
   int p = -1;
   // Inicializar finger
   finger.begin(57600);
 
   detectar_sensor();
+  escribirEnLCDFijo("Pon el dedo.");
   while (p != FINGERPRINT_OK) {
-    strcpy(mensaje, "Introduce la huella. ");
-    escribirEnLCDDinamico(mensaje, strlen(mensaje));
     p = finger.getImage();
     switch (p) {
     case FINGERPRINT_OK:
@@ -195,22 +207,18 @@ uint8_t crearHuella(uint8_t id) { // Es la función "getFingerprintEnroll" del f
       return p;
   }
 
-  escribirEnLCDFijo("Retirala");
+  escribirEnLCDFijo("Retiralo...");
   delay(2000);
 
   p = 0;
   while (p != FINGERPRINT_NOFINGER) {
-    strcpy(mensaje, "Introduce la huella. ");
-    escribirEnLCDDinamico(mensaje, strlen(mensaje));
     p = finger.getImage();
   }
   Serial.print("ID "); Serial.println(id);
   p = -1;
-  escribirEnLCDFijo("Retirala");
 
+  escribirEnLCDFijo("Pon el dedo.");
   while (p != FINGERPRINT_OK) {
-    strcpy(mensaje, "Introduce la huella. ");
-    escribirEnLCDDinamico(mensaje, strlen(mensaje));
     p = finger.getImage();
     switch (p) {
     case FINGERPRINT_OK:
@@ -230,8 +238,7 @@ uint8_t crearHuella(uint8_t id) { // Es la función "getFingerprintEnroll" del f
       break;
     }
   }
-
-  escribirEnLCDFijo("Retirala");
+  escribirEnLCDFijo("Mantenlo...");
 
   p = finger.image2Tz(2);
   switch (p) {
@@ -255,6 +262,7 @@ uint8_t crearHuella(uint8_t id) { // Es la función "getFingerprintEnroll" del f
       return p;
   }
 
+  escribirEnLCDFijo("Retiralo...");
   Serial.print("Creating model for #");  Serial.println(id);
 
   p = finger.createModel();
@@ -288,8 +296,6 @@ uint8_t crearHuella(uint8_t id) { // Es la función "getFingerprintEnroll" del f
     Serial.println("Unknown error");
     return p;
   }
-
   escribirEnLCDFijo("Huella guardada.");
-
   return true;
 }
