@@ -24,9 +24,6 @@ int appData = 0;
 uint8_t huellaEncontrada = -1;
 
 void setup() {
-  // Inicializar serial
-  Serial.begin(9600);
-
   // Inicializar bluetooth
   BTSerial.begin(9600);
 
@@ -36,11 +33,16 @@ void setup() {
   // Inicializar servo
   myServo.attach(A0);
 
+  myServo.write(0);
+  delay(1000);
+  myServo.write(90);
+
   pantallaEspera();
 }
 
 void loop() {
   if (BTSerial.available()) {
+
     appData = BTSerial.read() - '0';
     int numString = 0;
     
@@ -54,18 +56,22 @@ void loop() {
         uint8_t id = (uint8_t)numInt;
         while (id != 0 && !crearHuella(id));
         BTSerial.begin(9600);
+        BTSerial.write("0");
+        BTSerial.flush();
         lcd.clear();
         pantallaEspera();
-        delay(500);
-        BTSerial.write("0");
       }
     } else if (appData == 2) {
       abrirPuerta();
       BTSerial.begin(9600);
+      BTSerial.write("0");
+      BTSerial.flush();
       lcd.clear();
       pantallaEspera();
-      delay(500);
-      BTSerial.write("0");
+    } else if (appData == 3) {
+      escribirEnLCDFijo("Conectado.");
+      BTSerial.begin(9600);
+      pantallaEspera();
     }
   }
   delay(100);
@@ -111,7 +117,7 @@ void abrirPuerta() {
   huellaEncontrada = getFingerprintIDez();
   delay(500);
   if (huellaEncontrada != 255) {  //255 es el número de error en unit8_t
-    escribirEnLCDFijo("Abriendo puerta.");
+    escribirEnLCDFijo("Puerta abierta.");
     controlServo();
   } else {
     escribirEnLCDFijo("Error de huella.");
@@ -130,9 +136,8 @@ void controlServo() {
 
 void detectar_sensor() {
   if (finger.verifyPassword()) {
-    escribirEnLCDFijo("Sensor OK. ");
   } else {
-    escribirEnLCDFijo("Sensor no OK. ");
+    escribirEnLCDFijo("Sensor NO OK. ");
     while (1) {
       delay(1);
     }
@@ -161,7 +166,7 @@ uint8_t getFingerprintIDez() {
   p = finger.fingerFastSearch();
   if (p != FINGERPRINT_OK) return -1;
 
-  escribirEnLCDFijo("Huella OK. ");
+  escribirEnLCDFijo("Huella Valida. ");
   return finger.fingerID;
 }
 
@@ -192,7 +197,6 @@ uint8_t crearHuella(uint8_t id) {
   }
 
   escribirEnLCDFijo("Retiralo...");
-  delay(2000);
 
   p = 0;
   while (p != FINGERPRINT_NOFINGER) {
