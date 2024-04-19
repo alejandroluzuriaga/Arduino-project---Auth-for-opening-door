@@ -44,9 +44,8 @@ void loop() {
   if (BTSerial.available()) {
 
     appData = BTSerial.read() - '0';
-    int numString = 0;
     
-    if (appData == 1) {
+    if (appData == 1) { // Crear huella
       while (!BTSerial.available());
       String numString = "0";
       numString = leerID();
@@ -61,14 +60,14 @@ void loop() {
         lcd.clear();
         pantallaEspera();
       }
-    } else if (appData == 2) {
+    } else if (appData == 2) { // Abrir puerta
       abrirPuerta();
       BTSerial.begin(9600);
       BTSerial.write("0");
       BTSerial.flush();
       lcd.clear();
       pantallaEspera();
-    } else if (appData == 3) {
+    } else if (appData == 3) { //Conectado
       escribirEnLCDFijo("Conectado.");
       BTSerial.begin(9600);
       pantallaEspera();
